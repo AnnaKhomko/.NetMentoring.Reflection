@@ -51,9 +51,9 @@
   <ItemGroup>
     <Compile Include="TestData\CustomerBLL.cs" />
     <Compile Include="TestData\CustomerDAL.cs" />
-    <Compile Include="TestData\ICustomerDAL.cs" />
+    <Compile Include="TestData\Interfaces\ICustomerDAL.cs" />
     <Compile Include="TestData\Logger.cs" />
-    <Compile Include="UnitTest1.cs" />
+    <Compile Include="ContainerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

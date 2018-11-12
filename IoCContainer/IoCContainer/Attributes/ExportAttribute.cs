@@ -12,11 +12,11 @@ namespace IoCContainer.Attributes
 		public ExportAttribute()
 		{ }
 
-		public ExportAttribute(Type contract)
+		public ExportAttribute(Type type)
 		{
-			Contract = contract;
+			Type = type;
 		}
 
-		public Type Contract { get; private set; }
+		public Type Type { get; private set; }
 	}
 }

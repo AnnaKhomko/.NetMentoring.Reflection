@@ -44,8 +44,10 @@
     <Compile Include="Attributes\ExportAttribute.cs" />
     <Compile Include="Attributes\ImportAttribute.cs" />
     <Compile Include="Attributes\ImportConstructorAttribute.cs" />
-    <Compile Include="Class1.cs" />
+    <Compile Include="Container.cs" />
+    <Compile Include="Exceptions\CustomContainerException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
