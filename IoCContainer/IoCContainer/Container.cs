@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace IoCContainer
 {
+	/// <summary>
+	/// 
+	/// </summary>
 	public class Container
 	{
 		private readonly Dictionary<Type, Type> types;
@@ -30,7 +33,7 @@ namespace IoCContainer
 		/// <summary>
 		/// Adds the type.
 		/// </summary>
-		/// <param name="baseType">Type of the base.</param>
+		/// <param name="baseType">Base type.</param>
 		/// <param name="type">The type.</param>
 		public void AddType(Type baseType, Type type)
 		{
@@ -46,10 +49,9 @@ namespace IoCContainer
 			var listOfTypes = assembly.GetTypes();
 			foreach (var type in listOfTypes)
 			{
-				var typeImportConstrAttr = type.GetCustomAttribute<ImportConstructorAttribute>();
-				var typeImportPropAttr = type.GetProperties().Where(x => x.GetCustomAttribute<ImportAttribute>() != null);
+				var typeImportConstrAttr = type.GetCustomAttribute<ImportConstructorAttribute>();				
 
-				if (typeImportConstrAttr != null || typeImportPropAttr.Count() > 0)
+				if (typeImportConstrAttr != null || HasImportProperties(type))
 				{
 					types.Add(type, type);
 				}
@@ -92,6 +94,19 @@ namespace IoCContainer
 		#region Private
 
 		/// <summary>
+		/// Determines whether the specified type has import properties.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <returns>
+		///   <c>true</c> if the specified type has import properties; otherwise, <c>false</c>.
+		/// </returns>
+		private bool HasImportProperties(Type type)
+		{
+			var typeImportPropAttributes = type.GetProperties().Where(x => x.GetCustomAttribute<ImportAttribute>() != null);
+			return typeImportPropAttributes.Any();
+		}
+
+		/// <summary>
 		/// Creates the instance with dependencies.
 		/// </summary>
 		/// <param name="type">The type.</param>
@@ -105,18 +120,13 @@ namespace IoCContainer
 		{
 			if (!types.ContainsKey(type))
 			{
-				throw new CustomContainerException($"CreateInstance method throws an exception. Type {type.Name} is not registered.");
+				throw new CustomContainerException($"Cannot create instance of {type.FullName}. Dependency is not provided");
 			}
 
 			var typeToGetInstance = types[type];
-			var constrOfType = typeToGetInstance.GetConstructors();
-			if (constrOfType.Count() == 0)
-			{
-				throw new CustomContainerException($"CreateInstance method throws an exception. Type {type.Name} doesn't have a public constructor.");
-			}
+			ConstructorInfo constructorInfo = GetConstructor(typeToGetInstance);
 
-			var currectConstr = constrOfType.First();
-			var instance = ResolveConstructor(typeToGetInstance, currectConstr);
+			var instance = ResolveConstructor(typeToGetInstance, constructorInfo);
 			if (type.GetCustomAttribute<ImportConstructorAttribute>() != null)
 			{
 				return instance;
@@ -127,18 +137,21 @@ namespace IoCContainer
 		}
 
 		/// <summary>
-		/// Resolves the properties.
+		/// Gets the constructor.
 		/// </summary>
 		/// <param name="type">The type.</param>
-		/// <param name="instance">The instance.</param>
-		private void ResolveProperties(Type type, object instance)
+		/// <returns></returns>
+		/// <exception cref="DIException">There are no public constructors for type {type.FullName}</exception>
+		private ConstructorInfo GetConstructor(Type type)
 		{
-			var propertiesToResolve = type.GetProperties().Where(x => x.GetCustomAttribute<ImportAttribute>() != null);
-			foreach (var property in propertiesToResolve)
+			ConstructorInfo[] constructors = type.GetConstructors();
+
+			if (constructors.Length == 0)
 			{
-				var resolvedProp = CreateInstanceWithDependencies(property.PropertyType);
-				property.SetValue(instance, resolvedProp);
+				throw new CustomContainerException($"There are no public constructors for type {type.FullName}");
 			}
+
+			return constructors.First();
 		}
 
 		/// <summary>
@@ -156,6 +169,21 @@ namespace IoCContainer
 			return instance;
 		}
 
+		/// <summary>
+		/// Resolves the properties.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <param name="instance">The instance.</param>
+		private void ResolveProperties(Type type, object instance)
+		{
+			var propertiesToResolve = type.GetProperties().Where(x => x.GetCustomAttribute<ImportAttribute>() != null);
+			foreach (var property in propertiesToResolve)
+			{
+				var resolvedProp = CreateInstanceWithDependencies(property.PropertyType);
+				property.SetValue(instance, resolvedProp);
+			}
+		}
+		
 		#endregion
 	}
 }
